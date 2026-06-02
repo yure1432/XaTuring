@@ -1,0 +1,8 @@
+[Unit]
+Description=XaTuring graph export
+
+[Service]
+Type=oneshot
+User=bartmoss_server
+WorkingDirectory=/home/bartmoss_server/xaturing
+ExecStart=/usr/bin/python /home/bartmoss_server/xaturing/export_graph.py

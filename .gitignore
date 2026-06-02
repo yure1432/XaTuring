@@ -1,0 +1,9 @@
+memory.db
+memory.db-wal
+memory.db-shm
+.env
+xaturing.log
+graph.json
+__pycache__/
+*.pyc
+test.db

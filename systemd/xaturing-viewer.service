@@ -1,0 +1,16 @@
+[Unit]
+Description=XaTuring viewer - territory graph server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=bartmoss_server
+WorkingDirectory=/home/bartmoss_server/xaturing
+ExecStart=/usr/bin/python /home/bartmoss_server/xaturing/serve.py
+Restart=always
+RestartSec=10
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
