@@ -7,6 +7,10 @@ Wants=network-online.target
 Type=simple
 User=bartmoss_server
 WorkingDirectory=/home/bartmoss_server/xaturing
+# ensure the schema exists and is current before the animal wakes. db_setup is
+# idempotent: it creates the schema on a fresh db, and migrates an older one in
+# place (preserving all accumulated memory) — so this is a no-op once migrated.
+ExecStartPre=/usr/bin/python /home/bartmoss_server/xaturing/db_setup.py
 ExecStart=/usr/bin/python /home/bartmoss_server/xaturing/xaturing.py
 Restart=always
 RestartSec=10
