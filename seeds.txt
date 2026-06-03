@@ -1,0 +1,9 @@
+# XaTuring seed waters — one URL per line, # for comments.
+# These are link-dense, crawl-friendly hubs to start the animal foraging.
+# Edit freely; the frontier is seeded from this file only on a fresh database.
+
+https://en.wikipedia.org/wiki/Special:Random
+https://news.ycombinator.com
+https://www.gutenberg.org
+https://archive.org
+https://github.com/explore

@@ -49,13 +49,17 @@ sidestepping SQLite's single-writer constraint entirely. The queue is bounded, s
 fetchers outrun the writer they apply backpressure and self-regulate to a sustainable
 pace.
 
-**The memory** is a SQLite database with four tables:
+**The memory** is a SQLite database, kept deliberately compact so the animal can live a
+long time on a small disk. Every URL string is stored exactly **once** in `urls`;
+everything else refers to it by integer id, so the link-graph costs a couple of integers
+per edge instead of two long strings.
 
 | table | what it holds |
 |-------|---------------|
-| `pages` | every page visited — title, host, status, timestamp |
-| `links` | the graph — every `from → to` edge (the artifact) |
-| `frontier` | every discovered URL: `pending`, `claimed`, or `visited` |
+| `urls` | every URL the animal has ever seen, stored once: `id → url` (the string pool) |
+| `pages` | every page visited — `url_id`, title, host, status, timestamp |
+| `links` | the graph — every `from_id → to_id` edge (the artifact), as id pairs |
+| `frontier` | every discovered URL by `url_id`: `pending`, `claimed`, `visited`, `skipped` (robots-blocked, non-HTML, or dead), or `failed` (transient errors that outlived their retries), plus a `retry_count` |
 | `hosts` | per-host novelty scores — the animal's learned map of where the good water is |
 
 **The gait** is the soul of the project. The writer accumulates, per host, how many new
@@ -66,10 +70,11 @@ default, so the unexplored is always worth investigating.
 ## Politeness is its nature, not a feature
 
 XaTuring moves slowly enough never to disturb what it observes. It respects `robots.txt`,
-rate-limits itself, identifies itself honestly with a descriptive User-Agent, and only
-ever issues plain GET requests. Hostile, locked-down sites are simply thin water it moves
-past — not walls it batters against. This is not an optional setting; it is what kind of
-creature XaTuring is.
+holds itself to **one request per host at a time** with a crawl delay between touches
+(honouring a host's `Crawl-delay` when it asks for more), identifies itself honestly with
+a descriptive `User-Agent` on every request, and only ever issues plain GET requests.
+Hostile, locked-down sites are simply thin water it moves past — not walls it batters
+against. This is not an optional setting; it is what kind of creature XaTuring is.
 
 ## The wake
 
@@ -141,13 +146,14 @@ recovers cleanly from crashes, and shuts down gracefully on `SIGTERM`.
 Functionally complete and actively running.
 
 - [x] Polite crawler — normalization, rate limiting, robots compliance
-- [x] Persistent SQLite memory — pages, the link-graph, a resumable frontier
+- [x] Persistent SQLite memory — interned URLs, the link-graph, a resumable frontier
 - [x] Always-on systemd daemon — crash recovery, graceful shutdown
 - [x] The wake — live logging, by-hand queries, the territory viewer
 - [x] Asynchronous concurrent fetching — producer/consumer with a single writer
 - [x] The gait — richness-driven foraging
-- [ ] Memory decay — letting the animal forget the oldest, least-significant territory,
-      the way an animal's memory is lossy *(planned, for the long-running daemon)*
+- [x] Memory decay — the animal forgets the oldest territory that also went **dry** (few
+      new links), while **hubs** — landmarks many hosts link to — are kept regardless of
+      age. Freed space is returned to the disk, so the footprint stays bounded for years.
 
 ## A note on intent
 

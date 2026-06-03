@@ -14,8 +14,14 @@ con = sqlite3.connect(DB_PATH)
 cur = con.cursor()
 
 # --- host -> host edges ---
+# links store integer url ids now; join through urls to recover the URL strings.
 edge_weights = defaultdict(int)
-for from_url, to_url in cur.execute("SELECT from_url, to_url FROM links"):
+for from_url, to_url in cur.execute("""
+    SELECT uf.url, ut.url
+    FROM links l
+    JOIN urls uf ON uf.id = l.from_id
+    JOIN urls ut ON ut.id = l.to_id
+"""):
     from_host = urlparse(from_url).netloc
     to_host = urlparse(to_url).netloc
     if from_host and to_host and from_host != to_host:
@@ -57,15 +63,9 @@ except Exception as e:
 
 in_deg = dict(G.in_degree())
 
-# --- recency: convert timestamps to a 0..1 freshness score ---
-times = []
-for h in G.nodes():
-    ts = last_seen.get(h)
-    if ts:
-        try:
-            times.append(datetime.fromisoformat(ts).timestamp())
-        except Exception:
-            pass
+# --- recency: convert epoch timestamps to a 0..1 freshness score ---
+times = [float(last_seen[h]) for h in G.nodes()
+         if last_seen.get(h) is not None]
 
 t_min = min(times) if times else 0
 t_max = max(times) if times else 1
@@ -73,13 +73,9 @@ t_range = (t_max - t_min) or 1
 
 def freshness(host):
     ts = last_seen.get(host)
-    if not ts:
+    if ts is None:
         return 0.0
-    try:
-        t = datetime.fromisoformat(ts).timestamp()
-        return (t - t_min) / t_range   # 0 = oldest, 1 = most recent
-    except Exception:
-        return 0.0
+    return (float(ts) - t_min) / t_range   # 0 = oldest, 1 = most recent
 
 SCALE = 1000
 nodes = []
