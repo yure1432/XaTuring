@@ -1,9 +1,31 @@
-# XaTuring seed waters — one URL per line, # for comments.
-# These are link-dense, crawl-friendly hubs to start the animal foraging.
-# Edit freely; the frontier is seeded from this file only on a fresh database.
+# XaTuring seed waters — curated for the indie/old/weird web.
+# All URLs verified live as of June 2026. One per line, # for comments.
+# The frontier is seeded from this file only on a fresh database.
+#
+# Add your own waters: your Neocities, your Gemini-web haunts, your bookmarks.
+# Those are what make the territory genuinely yours.
 
-https://en.wikipedia.org/wiki/Special:Random
-https://news.ycombinator.com
-https://www.gutenberg.org
-https://archive.org
-https://github.com/explore
+# --- webrings & indie-web hubs (dense outward links — richest foraging) ---
+https://webring.xxiivv.com
+https://indieweb.org
+https://indieweb.org/webring
+https://xn--sr8hvo.ws
+https://indieseek.xyz
+
+# --- small-web / old-web discovery engines (gateways to the retro web) ---
+https://wiby.me
+https://marginalia-search.com
+
+# --- the lightweight-web clubs (curated minimal personal sites) ---
+https://250kb.club
+https://512kb.club
+https://1mb.club
+
+# --- the xxiivv / hundred rabbits orbit (tool-craft, lore, netrunner aesthetic) ---
+https://wiki.xxiivv.com
+https://100r.co
+https://kokorobot.ca
+
+# --- neocities (the largest pool of personal retro/old-web sites) ---
+https://neocities.org/browse?tag=indieweb
+https://neocities.org/browse?tag=retro

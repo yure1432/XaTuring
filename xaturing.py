@@ -207,11 +207,12 @@ async def get_response(client, url):
         response = await client.get(url, timeout=10, follow_redirects=True)
         response.raise_for_status()
     except httpx.HTTPStatusError as e:
-        # 4xx is the resource itself saying no — terminal. 5xx is the server
-        # stumbling — transient, worth retrying.
         status = e.response.status_code
         logging.error(f"HTTP {status} for {url}")
         return ("retry" if status >= 500 else "skip"), None
+    except (httpx.InvalidURL, httpx.UnsupportedProtocol) as e:
+        logging.warning(f"skipping malformed URL {url!r}: {e}")
+        return "skip", None
     except httpx.HTTPError as e:
         # timeouts, connection errors, malformed responses — transient
         logging.error(f"Failed to fetch {url}: {e}")
