@@ -9,7 +9,6 @@
 https://webring.xxiivv.com
 https://indieweb.org
 https://indieweb.org/webring
-https://xn--sr8hvo.ws
 https://indieseek.xyz
 
 # --- small-web / old-web discovery engines (gateways to the retro web) ---

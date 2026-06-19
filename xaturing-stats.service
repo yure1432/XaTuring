@@ -1,0 +1,18 @@
+[Unit]
+Description=XaTuring stats endpoint (for Glance)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=bartmoss_server
+WorkingDirectory=/home/bartmoss_server/xaturing
+ExecStart=/usr/bin/python /home/bartmoss_server/xaturing/stats_server.py
+Restart=always
+RestartSec=10
+MemoryMax=128M
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
+
