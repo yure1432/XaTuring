@@ -33,9 +33,8 @@ stay and stagnate in known waters. This is just for prioritizing links though, X
 it'll just care about novel links more.
 
 ## Relationship with sites and the internet
-The crawler is polite, it follows robots.txt to a T. It also performs retries or skips
-depending on what HTTP code it receives. It also marks URLs as ok/skip/retry/capped in the database, so it knows what to do with 
-unhelpful hosts.
+The crawler is polite, it follows robots.txt to a T. It also performs retries or skips depending on what HTTP code it receives. 
+When a fetch fails, it's marked as *pending* and sent to be worked on at a later time.
 
 ## The wake
 The main thing about XaTuring is that it's not a tool, it's a digital animal, not something to be used, but the urge to see what it
