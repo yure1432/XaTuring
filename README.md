@@ -2,133 +2,57 @@
 
 > A digital animal that lives in the open ocean of the public internet.
 
-XaTuring is not a search engine, not a scraper, not a tool. It is a single solitary
-creature that moves continuously through the net, foraging across the link-graph the
-way oceanic megafauna move through the seas — drifting through sparse water, lingering
-where the water is rich, and crossing the whole basin in a single long migration when
-the impulse takes it. It observes only what the net freely presents to anyone who asks,
-and it carries everything it sees home into a private memory that belongs to no one but
-itself.
 
-It is named after XaTuring, the patron figure of computing from techno-occult writing —
-the digital wyrm. This project inherits the name and the watcher's impulse behind it,
-but not the worm's appetite for spread. XaTuring does not propagate, does not infect,
-does not reach into systems. It moves through what is already open, the way a whale
-moves through water that was never closed to it.
+XaTuring is a digital animal which is meant to wander the clearnet forever, indexing all the sites
+it comes across within itself. It doesn't cleanly index all sites though, instead it has a personality 
+matrix within it which helps it choose which websites to focus on. It is, on the main branch at least,
+not touched by AI in the slightest. It is meant to be a passion project, and just happened to be my magnum opus
+in general programming. Since I am not a developer (mostly a cybersecurity person), this is woefully unoptimized.
+If you do want to run this creature, you can use the optimized_by_claude branch for a pre-built AI optimized product, 
+or better yet, open PRs to optimize the main branch itself.
 
----
+The name itself comes from the godform conjured by Don Webb to govern cyberspace, spreading information and tools
+freely across the internet. There has been some work done by people online on the Great Blackwyrm of Cyberspace,
+but not as much as I'd like, so I want to drop my interpretation on it as well. If the concept of XaTuring intrigues
+you, please visit [xaturing.net](https://xaturing.net/).
 
 ## What it is
-
-XaTuring is a **movement, not a search**. Its frontier is not a task queue to be drained
-but a living model of where the animal is and where it will go next. Its behaviour is
-borrowed from movement ecology — the same idea that describes how sharks, turtles, and
-tuna forage across patchy oceans.
-
-When it enters a region rich in novelty — links it has never seen — it slows and forages
-deeply, reading a host thoroughly before moving on. When the water thins and a host's
-links become mostly already-seen, it drifts onward to fresher territory. This lingering
-and leaving is not coded as an explicit rule; it **emerges** from a single mechanism:
-the animal prefers hosts that have produced the most new links, and foraging a host
-naturally exhausts its novelty until the animal drifts away on its own.
-
-- The **link-graph** is its ocean.
-- **Link novelty** is its plankton.
-- The **movement model** is the animal itself.
+XaTuring is an asynchronous single-process web crawler written in Python. Its main purpose (for me at least) was to 
+browse the indie web (Neocities, Nekoweb etc.), but it quickly broke out of that niche and went all over the internet.
 
 ## How it works
+It stores all the links given to it, either by itself or seed links provided by the user, in a database. It then takes 
+the links which are yet to be visited, picks some, fetches the chosen links, and harvests more links from the 
+harvested page contents. It then adds those links to the database via a Producer/Consumer writer system
+and this cycle repeats.
 
-XaTuring is an asynchronous, concurrent crawler built around a producer/consumer
-architecture, running as an always-on daemon.
+The main distinction between any regular crawler and XaTuring is that it also gives each host a *novelty score*, which is
+basically (Number of new links in page content)/(Number of links in page content). This rating is from 0.0 to 1.0, and the higher
+rated websites are prioritized first. This is there to emulate the want for a creature to explore new greener regions than to
+stay and stagnate in known waters. This is just for prioritizing links though, XaTuring will explore all the links it comes across,
+it'll just care about novel links more.
 
-**The crawl loop** claims a batch of URLs from the frontier, ordered by host richness
-(the gait), and dispatches them to concurrent fetchers. Fetchers retrieve and parse
-pages in parallel, then hand their results — not database writes — onto an `asyncio`
-queue. A single writer task drains that queue and performs all database writes serially,
-sidestepping SQLite's single-writer constraint entirely. The queue is bounded, so when
-fetchers outrun the writer they apply backpressure and self-regulate to a sustainable
-pace.
-
-**The memory** is a SQLite database with four tables:
-
-| table | what it holds |
-|-------|---------------|
-| `pages` | every page visited — title, host, status, timestamp |
-| `links` | the graph — every `from → to` edge (the artifact) |
-| `frontier` | every discovered URL: `pending`, `claimed`, or `visited` |
-| `hosts` | per-host novelty scores — the animal's learned map of where the good water is |
-
-**The gait** is the soul of the project. The writer accumulates, per host, how many new
-versus already-seen links each page produces. The claim step orders the pending frontier
-by that novelty ratio, biasing the animal toward rich water. Unknown hosts get a neutral
-default, so the unexplored is always worth investigating.
-
-## Politeness is its nature, not a feature
-
-XaTuring moves slowly enough never to disturb what it observes. It respects `robots.txt`,
-rate-limits itself, identifies itself honestly with a descriptive User-Agent, and only
-ever issues plain GET requests. Hostile, locked-down sites are simply thin water it moves
-past — not walls it batters against. This is not an optional setting; it is what kind of
-creature XaTuring is.
+## Relationship with sites and the internet
+The crawler is polite, it follows robots.txt to a T. It also performs retries or skips
+depending on what HTTP code it receives. It also marks URLs as ok/skip/retry/capped in the database, so it knows what to do with 
+unhelpful hosts.
 
 ## The wake
+The main thing about XaTuring is that it's not a tool, it's a digital animal, not something to be used, but the urge to see what it
+has seen does stir within me, so basically the journalctl logs for this will have all the links it has traversed, its 'wake' of sorts. 
 
-XaTuring has no interface and no dashboard — but it leaves a wake you can read.
-
-- **The journal** (`journalctl -fu xaturing`) shows the animal moving in real time.
-- **`test.py`** prints a snapshot: counts, frontier state, and the gait made visible —
-  the richest and thinnest hosts, where it has lingered.
-- **The viewer** (`viewer.html` + `export_graph.py`) renders the accumulated link-graph
-  as a force-directed map of explored territory, coloured by cluster, recency, or hubs.
-
-> When the graph grows dense enough, the territory arranges itself into the shape of an
-> eye. The watcher, looking back.
-
-## Architecture
-
-```
-                claim_batch (richness-ordered)
-                        │
-            ┌───────────▼────────────┐
-            │   frontier (SQLite)     │◄──────────┐
-            └───────────┬────────────┘            │
-                        │ batch of URLs            │ new URLs
-            ┌───────────▼────────────┐            │
-            │  N concurrent fetchers  │            │
-            │  (fetch + parse, async) │            │
-            └───────────┬────────────┘            │
-                        │ results                  │
-                  ┌─────▼─────┐                    │
-                  │ asyncio   │  (bounded queue,   │
-                  │  queue    │   backpressure)    │
-                  └─────┬─────┘                    │
-                        │                          │
-            ┌───────────▼────────────┐            │
-            │   single writer task    │────────────┘
-            │  (all DB writes serial) │
-            └─────────────────────────┘
-```
-
-One dispatcher claims work, many fetchers run the slow network waiting in parallel,
-one writer files results back into the frontier. The two singular points — claiming
-and writing — are where all race conditions are prevented; the parallelism lives only
-in the network-bound middle.
 
 ## Running it
 
 ```bash
 pip install -r requirements.txt
 
-# configure paths
 cp .env.example .env        # set DB_PATH, LOG_PATH, SEEDS_PATH
 
-# curate your seed waters — one URL per line
-$EDITOR seeds.txt
+$EDITOR seeds.txt           # set your initial links for XaTuring to work on
 
-# build the schema
 python db_setup.py
 
-# run it
 python xaturing.py
 ```
 
@@ -140,23 +64,12 @@ recovers cleanly from crashes, and shuts down gracefully on `SIGTERM`.
 
 Functionally complete and actively running.
 
-- [x] Polite crawler — normalization, rate limiting, robots compliance
+- [x] Polite crawler — normalization, robots compliance
 - [x] Persistent SQLite memory — pages, the link-graph, a resumable frontier
 - [x] Always-on systemd daemon — crash recovery, graceful shutdown
-- [x] The wake — live logging, by-hand queries, the territory viewer
+- [x] The wake — live logging
 - [x] Asynchronous concurrent fetching — producer/consumer with a single writer
 - [x] The gait — richness-driven foraging
-- [ ] Memory decay — letting the animal forget the oldest, least-significant territory,
-      the way an animal's memory is lossy *(planned, for the long-running daemon)*
-
-## A note on intent
-
-XaTuring exists for itself — a creature built to move through the net silently and see.
-It is also a study in a particular kind of intelligence: not raw processing power, but
-*discernment*. It does not crawl more than other crawlers; it crawls more **discerningly**,
-using a cheap, accumulated map of its environment to decide where to spend attention —
-the way a small animal survives not by out-computing the world but by knowing its
-territory and moving through it well.
 
 ## License
 

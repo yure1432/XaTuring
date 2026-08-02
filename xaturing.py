@@ -15,7 +15,6 @@ DB_PATH = os.path.expanduser(os.getenv("DB_PATH", "memory.db"))
 LOG_PATH = os.path.expanduser(os.getenv("LOG_PATH", "xaturing.log"))
 SEEDS_PATH = os.path.expanduser(os.getenv("SEEDS_PATH", "seeds.txt"))
 
-# tunables
 BATCH_SIZE = 20            # urls claimed and fetched per loop
 COMMIT_EVERY = 20          # writer commits after this many items
 MAX_PAGES_PER_HOST = 500   # per-host crawl cap (trap defense)
